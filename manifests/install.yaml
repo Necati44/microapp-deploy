@@ -10,8 +10,8 @@ metadata:
   namespace: projet-cicd
 type: Opaque
 data:
-  username: root
-  password: example
+  username: cm9vdA==
+  password: ZXhhbXBsZQ==
 ---
 apiVersion: v1
 kind: Service
