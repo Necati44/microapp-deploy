@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: db
+  name: db
+spec:
+  type: ClusterIP
+  ports:
+  - name: "db-service"
+    port: 27017
+    targetPort: 27017
+  selector:
+    app: db
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-persistent-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: front-end-react
+  name: front-end-react
+spec:
+  type: NodePort
+  ports:
+  - name: "front-end-react"
+    port: 3000
+    targetPort: 3000
+    nodePort: 31001
+  selector:
+    app: front-end-react
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: front-end-react
+  name: front-end-react
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front-end-react
+  template:
+    metadata:
+      labels:
+        app: front-end-react
+    spec:
+      containers:
+      - image: necati44/projet-cicd-front-end-react:latest
+        name: front-end-react
+        ports:
+        - containerPort: 3000
+          name: front-end-react
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: order
+  name: order
+spec:
+  type: ClusterIP
+  ports:
+  - name: "order-service"
+    port: 3002
+    targetPort: 3002
+  selector:
+    app: order
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: order
+  name: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+      - image: necati44/projet-cicd-order:latest
+        name: order
+        ports:
+        - containerPort: 3002
+          name: order
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: user
+  name: user
+spec:
+  type: ClusterIP
+  ports:
+  - name: "user-service"
+    port: 3001
+    targetPort: 3001
+  selector:
+    app: user
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: user
+  name: user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+      - image: necati44/projet-cicd-user:latest
+        name: user
+        ports:
+        - containerPort: 3001
+          name: user
