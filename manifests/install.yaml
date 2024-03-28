@@ -10,8 +10,8 @@ metadata:
   namespace: projet-cicd
 type: Opaque
 data:
-  username: ${{ secrets.USERNAME }}
-  password: ${{ secrets.PASSWORD }}
+  username: root
+  password: example
 ---
 apiVersion: v1
 kind: Service
